@@ -1,0 +1,779 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Project & Team Collaboration System</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: #0f1117;
+      color: #e0e0e0;
+      min-height: 100vh;
+    }
+
+    /* ── NAV ── */
+    nav {
+      background: #1a1d2e;
+      border-bottom: 1px solid #2d3250;
+      padding: 0 32px;
+      display: flex;
+      align-items: center;
+      height: 60px;
+      gap: 8px;
+    }
+    nav .logo {
+      font-size: 1.2rem;
+      font-weight: 700;
+      color: #7c6af7;
+      margin-right: auto;
+      letter-spacing: 0.5px;
+    }
+    nav .logo span { color: #a78bfa; }
+    nav button {
+      background: none;
+      border: none;
+      color: #aaa;
+      cursor: pointer;
+      padding: 8px 16px;
+      border-radius: 6px;
+      font-size: 0.9rem;
+      transition: all 0.2s;
+    }
+    nav button:hover, nav button.active {
+      background: #2d3250;
+      color: #fff;
+    }
+    nav button.active { color: #a78bfa; }
+
+    /* ── PAGES ── */
+    .page { display: none; padding: 32px; max-width: 1200px; margin: 0 auto; }
+    .page.active { display: block; }
+
+    /* ── CARDS ── */
+    .card {
+      background: #1a1d2e;
+      border: 1px solid #2d3250;
+      border-radius: 12px;
+      padding: 24px;
+      margin-bottom: 20px;
+    }
+    .card h2 {
+      font-size: 1rem;
+      color: #888;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      margin-bottom: 16px;
+    }
+
+    /* ── STATS ROW ── */
+    .stats-row {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 16px;
+      margin-bottom: 24px;
+    }
+    .stat-card {
+      background: #1a1d2e;
+      border: 1px solid #2d3250;
+      border-radius: 12px;
+      padding: 20px;
+      text-align: center;
+    }
+    .stat-card .number {
+      font-size: 2.2rem;
+      font-weight: 700;
+      color: #a78bfa;
+    }
+    .stat-card .label {
+      font-size: 0.85rem;
+      color: #888;
+      margin-top: 4px;
+    }
+
+    /* ── FORMS ── */
+    .form-row {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      margin-bottom: 20px;
+    }
+    input, select, textarea {
+      background: #0f1117;
+      border: 1px solid #2d3250;
+      color: #e0e0e0;
+      border-radius: 8px;
+      padding: 10px 14px;
+      font-size: 0.9rem;
+      outline: none;
+      transition: border 0.2s;
+    }
+    input:focus, select:focus, textarea:focus {
+      border-color: #7c6af7;
+    }
+    input { flex: 1; min-width: 160px; }
+    textarea { width: 100%; resize: vertical; min-height: 80px; }
+
+    .btn {
+      padding: 10px 20px;
+      border-radius: 8px;
+      border: none;
+      cursor: pointer;
+      font-size: 0.9rem;
+      font-weight: 600;
+      transition: all 0.2s;
+    }
+    .btn-primary { background: #7c6af7; color: #fff; }
+    .btn-primary:hover { background: #6655e0; }
+    .btn-danger { background: #e74c3c; color: #fff; font-size: 0.8rem; padding: 6px 12px; }
+    .btn-danger:hover { background: #c0392b; }
+    .btn-success { background: #27ae60; color: #fff; font-size: 0.8rem; padding: 6px 12px; }
+    .btn-success:hover { background: #219150; }
+    .btn-sm { font-size: 0.8rem; padding: 6px 14px; }
+
+    /* ── PROJECT LIST ── */
+    .project-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+      gap: 16px;
+    }
+    .project-card {
+      background: #1a1d2e;
+      border: 1px solid #2d3250;
+      border-radius: 12px;
+      padding: 20px;
+      transition: border-color 0.2s;
+      cursor: pointer;
+    }
+    .project-card:hover { border-color: #7c6af7; }
+    .project-card h3 { font-size: 1.1rem; margin-bottom: 6px; color: #fff; }
+    .project-card p { font-size: 0.85rem; color: #888; margin-bottom: 12px; }
+    .progress-bar {
+      background: #2d3250;
+      border-radius: 99px;
+      height: 6px;
+      overflow: hidden;
+      margin-bottom: 8px;
+    }
+    .progress-fill {
+      height: 100%;
+      border-radius: 99px;
+      background: linear-gradient(90deg, #7c6af7, #a78bfa);
+      transition: width 0.4s;
+    }
+    .meta { font-size: 0.8rem; color: #666; }
+    .badge {
+      display: inline-block;
+      padding: 3px 10px;
+      border-radius: 99px;
+      font-size: 0.75rem;
+      font-weight: 600;
+    }
+    .badge-todo     { background: #2d3250; color: #a78bfa; }
+    .badge-progress { background: #1e3a2f; color: #27ae60; }
+    .badge-done     { background: #1e2d3a; color: #3498db; }
+    .badge-high     { background: #3a1e1e; color: #e74c3c; }
+    .badge-medium   { background: #3a2e1e; color: #f39c12; }
+    .badge-low      { background: #1e3a1e; color: #27ae60; }
+
+    /* ── TASK LIST ── */
+    .task-item {
+      background: #0f1117;
+      border: 1px solid #2d3250;
+      border-radius: 10px;
+      padding: 14px 18px;
+      margin-bottom: 10px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .task-item.done { opacity: 0.5; }
+    .task-item.done .task-title { text-decoration: line-through; }
+    .task-info { flex: 1; }
+    .task-title { font-size: 0.95rem; font-weight: 500; color: #e0e0e0; }
+    .task-meta  { font-size: 0.8rem; color: #666; margin-top: 3px; }
+    .task-actions { display: flex; gap: 8px; }
+
+    /* ── BACK BUTTON ── */
+    .back-btn {
+      background: none;
+      border: none;
+      color: #7c6af7;
+      cursor: pointer;
+      font-size: 0.9rem;
+      margin-bottom: 20px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .back-btn:hover { color: #a78bfa; }
+
+    /* ── SECTION HEADER ── */
+    .section-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 20px;
+    }
+    .section-header h1 { font-size: 1.5rem; color: #fff; }
+
+    /* ── EMPTY STATE ── */
+    .empty {
+      text-align: center;
+      padding: 60px 20px;
+      color: #555;
+    }
+    .empty .icon { font-size: 3rem; margin-bottom: 12px; }
+
+    /* ── MODAL ── */
+    .modal-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.7);
+      z-index: 100;
+      align-items: center;
+      justify-content: center;
+    }
+    .modal-overlay.open { display: flex; }
+    .modal {
+      background: #1a1d2e;
+      border: 1px solid #2d3250;
+      border-radius: 14px;
+      padding: 28px;
+      min-width: 360px;
+      max-width: 500px;
+      width: 100%;
+    }
+    .modal h3 { margin-bottom: 18px; color: #fff; }
+    .modal .form-col { display: flex; flex-direction: column; gap: 10px; }
+    .modal-footer { display: flex; gap: 10px; justify-content: flex-end; margin-top: 20px; }
+    .btn-ghost {
+      background: none;
+      border: 1px solid #2d3250;
+      color: #aaa;
+      padding: 10px 20px;
+      border-radius: 8px;
+      cursor: pointer;
+    }
+    .btn-ghost:hover { border-color: #7c6af7; color: #fff; }
+
+    /* ── CHECKBOX ── */
+    input[type="checkbox"] {
+      width: 18px;
+      height: 18px;
+      min-width: 18px;
+      accent-color: #7c6af7;
+      cursor: pointer;
+    }
+
+    select { min-width: 120px; }
+
+    /* ── TOAST ── */
+    #toast {
+      position: fixed;
+      bottom: 24px;
+      right: 24px;
+      background: #27ae60;
+      color: #fff;
+      padding: 12px 22px;
+      border-radius: 8px;
+      font-size: 0.9rem;
+      transform: translateY(80px);
+      opacity: 0;
+      transition: all 0.3s;
+      z-index: 200;
+    }
+    #toast.show { transform: translateY(0); opacity: 1; }
+  </style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav>
+  <div class="logo">Project<span>Hub</span></div>
+  <button onclick="showPage('dashboard')" id="nav-dashboard" class="active">📊 Dashboard</button>
+  <button onclick="showPage('projects')"  id="nav-projects">📁 Projects</button>
+  <button onclick="showPage('tasks')"     id="nav-tasks">✅ All Tasks</button>
+</nav>
+
+<!-- TOAST -->
+<div id="toast"></div>
+
+<!-- ══════════════════════════════════════ -->
+<!-- PAGE: DASHBOARD                        -->
+<!-- ══════════════════════════════════════ -->
+<div class="page active" id="page-dashboard">
+  <div class="section-header">
+    <h1>Dashboard</h1>
+  </div>
+
+  <!-- Stats -->
+  <div class="stats-row">
+    <div class="stat-card">
+      <div class="number" id="stat-projects">0</div>
+      <div class="label">Total Projects</div>
+    </div>
+    <div class="stat-card">
+      <div class="number" id="stat-tasks">0</div>
+      <div class="label">Total Tasks</div>
+    </div>
+    <div class="stat-card">
+      <div class="number" id="stat-done">0</div>
+      <div class="label">Completed</div>
+    </div>
+    <div class="stat-card">
+      <div class="number" id="stat-pending">0</div>
+      <div class="label">Pending</div>
+    </div>
+  </div>
+
+  <!-- Recent Projects -->
+  <div class="card">
+    <h2>Recent Projects</h2>
+    <div id="dashboard-recent-projects"></div>
+  </div>
+
+  <!-- Recent Tasks -->
+  <div class="card">
+    <h2>Recent Tasks</h2>
+    <div id="dashboard-recent-tasks"></div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════ -->
+<!-- PAGE: PROJECTS                         -->
+<!-- ══════════════════════════════════════ -->
+<div class="page" id="page-projects">
+
+  <!-- Project List View -->
+  <div id="view-project-list">
+    <div class="section-header">
+      <h1>Projects</h1>
+      <button class="btn btn-primary" onclick="openModal('modal-add-project')">+ New Project</button>
+    </div>
+    <div class="project-grid" id="project-list"></div>
+  </div>
+
+  <!-- Project Detail View -->
+  <div id="view-project-detail" style="display:none">
+    <button class="back-btn" onclick="showProjectList()">← Back to Projects</button>
+
+    <div class="section-header">
+      <h1 id="detail-project-name">Project</h1>
+      <button class="btn btn-primary" onclick="openAddTaskModal()">+ Add Task</button>
+    </div>
+    <p id="detail-project-desc" style="color:#888; margin-bottom:24px;"></p>
+
+    <!-- Progress -->
+    <div class="card" style="padding:16px 24px;">
+      <div style="display:flex;justify-content:space-between;margin-bottom:8px;">
+        <span style="font-size:0.9rem;color:#aaa;">Progress</span>
+        <span style="color:#a78bfa;font-weight:700;" id="detail-progress-pct">0%</span>
+      </div>
+      <div class="progress-bar"><div class="progress-fill" id="detail-progress-bar" style="width:0%"></div></div>
+    </div>
+
+    <!-- Filter -->
+    <div class="form-row" style="margin-bottom:16px;">
+      <select id="filter-status" onchange="renderDetailTasks()">
+        <option value="">All Status</option>
+        <option value="todo">To Do</option>
+        <option value="in-progress">In Progress</option>
+        <option value="done">Done</option>
+      </select>
+      <select id="filter-priority" onchange="renderDetailTasks()">
+        <option value="">All Priority</option>
+        <option value="high">High</option>
+        <option value="medium">Medium</option>
+        <option value="low">Low</option>
+      </select>
+    </div>
+
+    <div id="detail-task-list"></div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════ -->
+<!-- PAGE: ALL TASKS                        -->
+<!-- ══════════════════════════════════════ -->
+<div class="page" id="page-tasks">
+  <div class="section-header">
+    <h1>All Tasks</h1>
+  </div>
+  <div class="form-row" style="margin-bottom:16px;">
+    <select id="all-filter-status" onchange="renderAllTasks()">
+      <option value="">All Status</option>
+      <option value="todo">To Do</option>
+      <option value="in-progress">In Progress</option>
+      <option value="done">Done</option>
+    </select>
+    <select id="all-filter-priority" onchange="renderAllTasks()">
+      <option value="">All Priority</option>
+      <option value="high">High</option>
+      <option value="medium">Medium</option>
+      <option value="low">Low</option>
+    </select>
+    <input type="text" id="all-search" placeholder="Search tasks..." oninput="renderAllTasks()" style="max-width:240px;">
+  </div>
+  <div id="all-task-list"></div>
+</div>
+
+
+<!-- ══════════════════════════════════════ -->
+<!-- MODAL: Add Project                     -->
+<!-- ══════════════════════════════════════ -->
+<div class="modal-overlay" id="modal-add-project">
+  <div class="modal">
+    <h3>New Project</h3>
+    <div class="form-col">
+      <input type="text"  id="proj-name"  placeholder="Project name" />
+      <textarea           id="proj-desc"  placeholder="Description (optional)"></textarea>
+      <input type="date"  id="proj-deadline" />
+    </div>
+    <div class="modal-footer">
+      <button class="btn-ghost" onclick="closeModal('modal-add-project')">Cancel</button>
+      <button class="btn btn-primary" onclick="addProject()">Create</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════ -->
+<!-- MODAL: Add Task                        -->
+<!-- ══════════════════════════════════════ -->
+<div class="modal-overlay" id="modal-add-task">
+  <div class="modal">
+    <h3>Add Task</h3>
+    <div class="form-col">
+      <input  type="text"  id="task-title"    placeholder="Task title" />
+      <textarea            id="task-desc"     placeholder="Description (optional)"></textarea>
+      <select              id="task-priority">
+        <option value="low">Low Priority</option>
+        <option value="medium" selected>Medium Priority</option>
+        <option value="high">High Priority</option>
+      </select>
+      <input  type="date"  id="task-deadline" />
+      <input  type="text"  id="task-assignee" placeholder="Assigned to (name)" />
+    </div>
+    <div class="modal-footer">
+      <button class="btn-ghost" onclick="closeModal('modal-add-task')">Cancel</button>
+      <button class="btn btn-primary" onclick="addTask()">Add Task</button>
+    </div>
+  </div>
+</div>
+
+
+<script>
+// ── DATA ──────────────────────────────────────────────
+let projects = JSON.parse(localStorage.getItem('ptms_projects') || '[]');
+let tasks    = JSON.parse(localStorage.getItem('ptms_tasks')    || '[]');
+let currentProjectId = null;
+
+function save() {
+  localStorage.setItem('ptms_projects', JSON.stringify(projects));
+  localStorage.setItem('ptms_tasks',    JSON.stringify(tasks));
+}
+
+// ── ROUTING ───────────────────────────────────────────
+function showPage(name) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('nav button').forEach(b => b.classList.remove('active'));
+  document.getElementById('page-' + name).classList.add('active');
+  document.getElementById('nav-' + name).classList.add('active');
+  if (name === 'dashboard')  renderDashboard();
+  if (name === 'projects')   { showProjectList(); renderProjectList(); }
+  if (name === 'tasks')      renderAllTasks();
+}
+
+// ── MODALS ────────────────────────────────────────────
+function openModal(id)  { document.getElementById(id).classList.add('open'); }
+function closeModal(id) { document.getElementById(id).classList.remove('open'); }
+document.querySelectorAll('.modal-overlay').forEach(m => {
+  m.addEventListener('click', e => { if (e.target === m) m.classList.remove('open'); });
+});
+
+// ── TOAST ─────────────────────────────────────────────
+function toast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2500);
+}
+
+// ── HELPERS ───────────────────────────────────────────
+function uid() { return Date.now().toString(36) + Math.random().toString(36).slice(2); }
+
+function statusBadge(s) {
+  const map = { 'todo': 'badge-todo', 'in-progress': 'badge-progress', 'done': 'badge-done' };
+  const label = { 'todo': 'To Do', 'in-progress': 'In Progress', 'done': 'Done' };
+  return `<span class="badge ${map[s] || 'badge-todo'}">${label[s] || s}</span>`;
+}
+function priorityBadge(p) {
+  const map = { 'high': 'badge-high', 'medium': 'badge-medium', 'low': 'badge-low' };
+  return `<span class="badge ${map[p] || 'badge-low'}">${p ? p.charAt(0).toUpperCase()+p.slice(1) : ''}</span>`;
+}
+
+function projectProgress(pid) {
+  const t = tasks.filter(t => t.projectId === pid);
+  if (!t.length) return 0;
+  return Math.round(t.filter(t => t.status === 'done').length / t.length * 100);
+}
+
+// ── DASHBOARD ─────────────────────────────────────────
+function renderDashboard() {
+  const total    = tasks.length;
+  const done     = tasks.filter(t => t.status === 'done').length;
+  const pending  = tasks.filter(t => t.status !== 'done').length;
+  document.getElementById('stat-projects').textContent = projects.length;
+  document.getElementById('stat-tasks').textContent    = total;
+  document.getElementById('stat-done').textContent     = done;
+  document.getElementById('stat-pending').textContent  = pending;
+
+  // Recent 3 projects
+  const rp = document.getElementById('dashboard-recent-projects');
+  if (!projects.length) {
+    rp.innerHTML = `<div class="empty"><div class="icon">📁</div><p>No projects yet. <a href="#" onclick="showPage('projects')" style="color:#7c6af7">Create one!</a></p></div>`;
+  } else {
+    rp.innerHTML = projects.slice(-3).reverse().map(p => {
+      const pct = projectProgress(p.id);
+      return `<div class="project-card" onclick="openProject('${p.id}')" style="margin-bottom:12px;">
+        <h3>${esc(p.name)}</h3>
+        <p>${esc(p.desc || 'No description')}</p>
+        <div class="progress-bar"><div class="progress-fill" style="width:${pct}%"></div></div>
+        <div class="meta">${pct}% complete · ${tasks.filter(t=>t.projectId===p.id).length} tasks</div>
+      </div>`;
+    }).join('');
+  }
+
+  // Recent 5 tasks
+  const rt = document.getElementById('dashboard-recent-tasks');
+  const recentTasks = tasks.slice(-5).reverse();
+  if (!recentTasks.length) {
+    rt.innerHTML = `<div class="empty"><div class="icon">✅</div><p>No tasks yet.</p></div>`;
+  } else {
+    rt.innerHTML = recentTasks.map(t => taskHTML(t, false)).join('');
+  }
+}
+
+// ── PROJECTS ──────────────────────────────────────────
+function addProject() {
+  const name = document.getElementById('proj-name').value.trim();
+  if (!name) { alert('Project name is required'); return; }
+  const p = {
+    id:       uid(),
+    name,
+    desc:     document.getElementById('proj-desc').value.trim(),
+    deadline: document.getElementById('proj-deadline').value,
+    createdAt: new Date().toISOString()
+  };
+  projects.push(p);
+  save();
+  document.getElementById('proj-name').value     = '';
+  document.getElementById('proj-desc').value     = '';
+  document.getElementById('proj-deadline').value = '';
+  closeModal('modal-add-project');
+  renderProjectList();
+  toast('Project created!');
+}
+
+function deleteProject(id) {
+  if (!confirm('Delete this project and all its tasks?')) return;
+  projects = projects.filter(p => p.id !== id);
+  tasks    = tasks.filter(t => t.projectId !== id);
+  save();
+  renderProjectList();
+  toast('Project deleted.');
+}
+
+function renderProjectList() {
+  const el = document.getElementById('project-list');
+  if (!projects.length) {
+    el.innerHTML = `<div class="empty" style="grid-column:1/-1"><div class="icon">📁</div><p>No projects yet. Click <strong>+ New Project</strong> to get started.</p></div>`;
+    return;
+  }
+  el.innerHTML = projects.map(p => {
+    const pct   = projectProgress(p.id);
+    const tCount = tasks.filter(t => t.projectId === p.id).length;
+    return `<div class="project-card" onclick="openProject('${p.id}')">
+      <h3>${esc(p.name)}</h3>
+      <p>${esc(p.desc || 'No description')}</p>
+      <div class="progress-bar"><div class="progress-fill" style="width:${pct}%"></div></div>
+      <div class="meta" style="display:flex;justify-content:space-between;margin-top:6px;">
+        <span>${pct}% complete</span>
+        <span>${tCount} task${tCount!==1?'s':''}</span>
+      </div>
+      ${p.deadline ? `<div class="meta" style="margin-top:4px;">📅 ${p.deadline}</div>` : ''}
+      <div style="margin-top:12px;" onclick="event.stopPropagation()">
+        <button class="btn btn-danger btn-sm" onclick="deleteProject('${p.id}')">Delete</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function showProjectList() {
+  document.getElementById('view-project-list').style.display   = 'block';
+  document.getElementById('view-project-detail').style.display = 'none';
+  renderProjectList();
+}
+
+function openProject(id) {
+  currentProjectId = id;
+  const p = projects.find(p => p.id === id);
+  if (!p) return;
+  document.getElementById('view-project-list').style.display   = 'none';
+  document.getElementById('view-project-detail').style.display = 'block';
+  document.getElementById('detail-project-name').textContent = p.name;
+  document.getElementById('detail-project-desc').textContent = p.desc || '';
+  renderDetailTasks();
+  showPage_noNav('projects');
+}
+
+function showPage_noNav(name) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.getElementById('page-' + name).classList.add('active');
+}
+
+// ── TASKS ─────────────────────────────────────────────
+function openAddTaskModal() {
+  document.getElementById('task-title').value    = '';
+  document.getElementById('task-desc').value     = '';
+  document.getElementById('task-priority').value = 'medium';
+  document.getElementById('task-deadline').value = '';
+  document.getElementById('task-assignee').value = '';
+  openModal('modal-add-task');
+}
+
+function addTask() {
+  const title = document.getElementById('task-title').value.trim();
+  if (!title) { alert('Task title is required'); return; }
+  const t = {
+    id:        uid(),
+    projectId: currentProjectId,
+    title,
+    desc:      document.getElementById('task-desc').value.trim(),
+    priority:  document.getElementById('task-priority').value,
+    deadline:  document.getElementById('task-deadline').value,
+    assignee:  document.getElementById('task-assignee').value.trim(),
+    status:    'todo',
+    createdAt: new Date().toISOString()
+  };
+  tasks.push(t);
+  save();
+  closeModal('modal-add-task');
+  renderDetailTasks();
+  toast('Task added!');
+}
+
+function toggleTaskStatus(id) {
+  const t = tasks.find(t => t.id === id);
+  if (!t) return;
+  const cycle = { 'todo': 'in-progress', 'in-progress': 'done', 'done': 'todo' };
+  t.status = cycle[t.status];
+  save();
+  renderDetailTasks();
+  renderDashboard();
+}
+
+function deleteTask(id) {
+  tasks = tasks.filter(t => t.id !== id);
+  save();
+  renderDetailTasks();
+  renderAllTasks();
+  toast('Task deleted.');
+}
+
+function taskHTML(t, showControls = true) {
+  const proj = projects.find(p => p.id === t.projectId);
+  return `<div class="task-item ${t.status === 'done' ? 'done' : ''}">
+    <input type="checkbox" ${t.status==='done'?'checked':''} onchange="toggleCheckbox('${t.id}', this)" />
+    <div class="task-info">
+      <div class="task-title">${esc(t.title)}</div>
+      <div class="task-meta">
+        ${priorityBadge(t.priority)} ${statusBadge(t.status)}
+        ${t.assignee ? `· 👤 ${esc(t.assignee)}` : ''}
+        ${t.deadline ? `· 📅 ${t.deadline}` : ''}
+        ${proj && !showControls ? `· 📁 ${esc(proj.name)}` : ''}
+      </div>
+      ${t.desc ? `<div style="font-size:0.8rem;color:#666;margin-top:4px;">${esc(t.desc)}</div>` : ''}
+    </div>
+    ${showControls ? `<div class="task-actions">
+      <select style="font-size:0.8rem;padding:5px 8px;" onchange="changeStatus('${t.id}', this.value)">
+        <option value="todo"        ${t.status==='todo'       ?'selected':''}>To Do</option>
+        <option value="in-progress" ${t.status==='in-progress'?'selected':''}>In Progress</option>
+        <option value="done"        ${t.status==='done'       ?'selected':''}>Done</option>
+      </select>
+      <button class="btn btn-danger" onclick="deleteTask('${t.id}')">🗑</button>
+    </div>` : ''}
+  </div>`;
+}
+
+function toggleCheckbox(id, el) {
+  const t = tasks.find(t => t.id === id);
+  if (!t) return;
+  t.status = el.checked ? 'done' : 'todo';
+  save();
+  renderDetailTasks();
+  renderAllTasks();
+}
+
+function changeStatus(id, val) {
+  const t = tasks.find(t => t.id === id);
+  if (!t) return;
+  t.status = val;
+  save();
+  renderDetailTasks();
+  updateProgress();
+}
+
+function updateProgress() {
+  if (!currentProjectId) return;
+  const pct = projectProgress(currentProjectId);
+  document.getElementById('detail-progress-pct').textContent = pct + '%';
+  document.getElementById('detail-progress-bar').style.width = pct + '%';
+}
+
+function renderDetailTasks() {
+  if (!currentProjectId) return;
+  const statusF   = document.getElementById('filter-status')?.value   || '';
+  const priorityF = document.getElementById('filter-priority')?.value || '';
+  let filtered = tasks.filter(t => t.projectId === currentProjectId);
+  if (statusF)   filtered = filtered.filter(t => t.status   === statusF);
+  if (priorityF) filtered = filtered.filter(t => t.priority === priorityF);
+
+  const el = document.getElementById('detail-task-list');
+  if (!filtered.length) {
+    el.innerHTML = `<div class="empty"><div class="icon">✅</div><p>No tasks found. Add one above!</p></div>`;
+  } else {
+    el.innerHTML = filtered.map(t => taskHTML(t, true)).join('');
+  }
+  updateProgress();
+}
+
+function renderAllTasks() {
+  const statusF   = document.getElementById('all-filter-status')?.value   || '';
+  const priorityF = document.getElementById('all-filter-priority')?.value || '';
+  const search    = document.getElementById('all-search')?.value.toLowerCase() || '';
+  let filtered = [...tasks];
+  if (statusF)   filtered = filtered.filter(t => t.status   === statusF);
+  if (priorityF) filtered = filtered.filter(t => t.priority === priorityF);
+  if (search)    filtered = filtered.filter(t => t.title.toLowerCase().includes(search));
+
+  const el = document.getElementById('all-task-list');
+  if (!filtered.length) {
+    el.innerHTML = `<div class="empty"><div class="icon">✅</div><p>No tasks found.</p></div>`;
+  } else {
+    el.innerHTML = filtered.map(t => taskHTML(t, false)).join('');
+  }
+}
+
+function esc(str) {
+  return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+// ── INIT ──────────────────────────────────────────────
+renderDashboard();
+</script>
+</body>
+</html>
